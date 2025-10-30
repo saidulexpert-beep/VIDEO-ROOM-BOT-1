@@ -11,6 +11,12 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
+  <!-- Ad SDKs -->
+  <script src='//libtl.com/sdk.js'></script>
+  <script src="https://ad.gigapub.tech/script?id=2200"></script>
+  <script src="https://cdn.tgads.space/assets/js/adexium-widget.min.js"></script>
+  <script src="https://adexora.com/cdn/ads.js?id=648"></script>
+
   <style>
     :root {
       --bg-color: #121212;
@@ -22,6 +28,7 @@
       --hover-bg-color: #333;
       --scrollbar-thumb-color: #555;
       --scrollbar-track-color: var(--primary-surface-color);
+      --lock-color: #ff5555;
     }
 
     html, body {
@@ -123,6 +130,7 @@
       border-radius: 8px;
       transition: background-color 0.2s ease-in-out;
       border: 2px solid transparent;
+      position: relative;
     }
 
     .video-card:hover {
@@ -132,6 +140,26 @@
     .video-card.active {
       background-color: var(--secondary-surface-color);
       border-color: var(--accent-color);
+    }
+    
+    .video-card.locked::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.5);
+        border-radius: 8px;
+        z-index: 1;
+    }
+
+    .lock-overlay {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 2rem;
+        color: white;
+        z-index: 2;
+        text-shadow: 0 0 5px black;
     }
 
     .thumbnail-container {
@@ -200,38 +228,79 @@
       font-size: 13px;
       color: var(--text-secondary);
     }
+    
+    /* Unlock Modal */
+    .unlock-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.7);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+    }
+    .unlock-modal {
+        background: var(--primary-surface-color);
+        padding: 24px;
+        border-radius: 12px;
+        text-align: center;
+        width: 90%;
+        max-width: 350px;
+        border: 1px solid var(--secondary-surface-color);
+    }
+    .unlock-modal h3 {
+        margin-top: 0;
+        color: var(--text-primary);
+    }
+    .unlock-modal p {
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+    }
+    .ad-counter {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin: 16px 0;
+    }
+    #watch-ad-btn {
+        background-color: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        width: 100%;
+        transition: background-color 0.2s;
+        font-family: 'Hind Siliguri', sans-serif;
+    }
+    #watch-ad-btn:hover {
+        background-color: #3388dd;
+    }
+    #watch-ad-btn:disabled {
+        background-color: var(--text-secondary);
+        cursor: not-allowed;
+    }
+    .close-modal-btn {
+        background: var(--secondary-surface-color);
+        color: var(--text-primary);
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 10px;
+    }
 
     /* Custom Scrollbar */
-    .playlist-section::-webkit-scrollbar {
-      width: 8px;
-    }
-    .playlist-section::-webkit-scrollbar-track {
-      background: var(--scrollbar-track-color);
-    }
-    .playlist-section::-webkit-scrollbar-thumb {
-      background-color: var(--scrollbar-thumb-color);
-      border-radius: 10px;
-      border: 2px solid var(--scrollbar-track-color);
-    }
+    .playlist-section::-webkit-scrollbar { width: 8px; }
+    .playlist-section::-webkit-scrollbar-track { background: var(--scrollbar-track-color); }
+    .playlist-section::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb-color); border-radius: 10px; border: 2px solid var(--scrollbar-track-color); }
 
-    /* Responsive adjustments for smaller screens */
     @media (max-width: 850px) {
-      .app-container {
-        flex-direction: column;
-        height: auto;
-        overflow: auto;
-      }
-      .player-section, .playlist-section {
-        flex: none;
-        width: 100%;
-      }
-      .playlist-section {
-        height: auto;
-        max-height: 60vh;
-      }
-      .thumbnail-container {
-        width: 120px;
-      }
+      .app-container { flex-direction: column; height: auto; overflow: auto; }
+      .player-section, .playlist-section { flex: none; width: 100%; }
+      .playlist-section { height: auto; max-height: 60vh; }
+      .thumbnail-container { width: 120px; }
     }
   </style>
 </head>
@@ -251,12 +320,24 @@
       <div class="video-feed" id="video-feed"></div>
     </div>
   </div>
+  
+  <div class="unlock-modal-overlay" id="unlock-modal-overlay">
+      <div class="unlock-modal">
+          <h3>🔒 ভিডিওটি লক করা</h3>
+          <p>এই ভিডিওটি আনলক করতে নিচের বাটনে ক্লিক করে ৫টি বিজ্ঞাপন দেখুন।</p>
+          <div class="ad-counter">
+              <span id="ad-watch-count">০</span> / ৫টি বিজ্ঞাপন দেখা হয়েছে
+          </div>
+          <button id="watch-ad-btn">বিজ্ঞাপন দেখুন</button>
+          <button class="close-modal-btn" id="close-modal-btn">বন্ধ করুন</button>
+      </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
     const VideoPlayerApp = {
       config: {
-        videos: [] // This will be loaded from Firebase
+        videos: []
       },
       
       firebaseConfig: {
@@ -273,7 +354,11 @@
         currentHlsInstance: null,
         activeVideoElement: null,
         lastTap: 0,
-        telegramUser: null
+        telegramUser: null,
+        unlockedVideos: [0], // First video is always unlocked
+        adsWatched: 0,
+        videoToUnlock: null,
+        currentAdIndex: 0
       },
 
       elements: {
@@ -281,11 +366,30 @@
         videoFeed: document.getElementById('video-feed'),
         loginScreen: document.getElementById('login-screen'),
         appContainer: document.getElementById('app-container'),
-        welcomeMessage: document.getElementById('welcome-message')
+        welcomeMessage: document.getElementById('welcome-message'),
+        unlockModalOverlay: document.getElementById('unlock-modal-overlay'),
+        adWatchCount: document.getElementById('ad-watch-count'),
+        watchAdBtn: document.getElementById('watch-ad-btn'),
+        closeModalBtn: document.getElementById('close-modal-btn'),
       },
       
+      ads: [
+        () => new Promise((resolve, reject) => { try { LibTl.SDK.show(10117142); resolve(); } catch (e) { reject(e); } }),
+        () => new Promise((resolve, reject) => { window.showGiga().then(resolve).catch(reject); }),
+        () => new Promise((resolve, reject) => { try { const adexiumWidget = new AdexiumWidget({wid: '6052f786-5400-4390-a082-0c893fc47da3', adFormat: 'push-like'}); adexiumWidget.autoMode(); resolve(); } catch(e) { reject(e); } }),
+        () => new Promise((resolve, reject) => { window.showAdexora().then(resolve).catch(reject); }),
+        () => new Promise((resolve, reject) => { try { LibTl.SDK.show(10056357); resolve(); } catch (e) { reject(e); } })
+      ],
+      
       init() {
+        this.loadUnlockedState();
+        this.addEventListeners();
         this.handleTelegramLogin();
+      },
+      
+      addEventListeners() {
+        this.elements.watchAdBtn.onclick = () => this.watchAd();
+        this.elements.closeModalBtn.onclick = () => this.hideUnlockModal();
       },
       
       handleTelegramLogin() {
@@ -295,39 +399,33 @@
           if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
               this.state.telegramUser = tg.initDataUnsafe.user;
               this.elements.welcomeMessage.innerText = `স্বাগতম, ${this.state.telegramUser.first_name}!`;
-              console.log("Logged in user:", this.state.telegramUser);
               this.initializeFirebase();
           } else {
               this.elements.loginScreen.innerHTML = `<div class="error-message">টেলিগ্রাম ব্যবহারকারীর তথ্য পাওয়া যায়নি। দয়া করে টেলিগ্রাম অ্যাপ থেকে খুলুন।</div>`;
-              console.error("Telegram user data not found.");
           }
       },
       
       initializeFirebase() {
         firebase.initializeApp(this.firebaseConfig);
         const db = firebase.database();
-        const videosRef = db.ref('/videos'); // Assumes your videos are stored in a 'videos' node
+        const videosRef = db.ref('/videos');
 
         videosRef.on('value', (snapshot) => {
             const data = snapshot.val();
             if (data && Array.isArray(data)) {
-                // Filter out any null/empty entries from Firebase
                 this.config.videos = data.filter(video => video && video.url);
                 this.showApp();
             } else {
                 this.elements.loginScreen.innerHTML = `<div class="error-message">ডাটাবেস থেকে কোনো ভিডিও খুঁজে পাওয়া যায়নি।</div>`;
-                console.error("No video data found in Firebase or data is not an array.");
             }
         }, (error) => {
             this.elements.loginScreen.innerHTML = `<div class="error-message">ডাটাবেস সংযোগে সমস্যা হয়েছে।</div>`;
-            console.error("Firebase read failed: " + error.code);
         });
       },
 
       showApp() {
         this.elements.loginScreen.style.display = 'none';
         this.elements.appContainer.classList.add('visible');
-
         this.renderVideoFeed();
         if (this.config.videos.length > 0) {
             this.loadVideo(0, true);
@@ -343,8 +441,18 @@
           if (!video.url) return;
           const card = document.createElement('div');
           card.className = 'video-card';
-          card.onclick = () => this.loadVideo(index, true);
-          card.innerHTML = `
+          
+          const isUnlocked = this.state.unlockedVideos.includes(index);
+
+          card.onclick = () => {
+            if (isUnlocked) {
+                this.loadVideo(index, true);
+            } else {
+                this.promptUnlock(index);
+            }
+          };
+          
+          let cardContent = `
             <div class="thumbnail-container">
               <img src="${video.thumbnail}" alt="${video.title}" loading="lazy">
               <span class="video-duration">${video.duration}</span>
@@ -353,14 +461,83 @@
               <h3 class="video-title">${video.title}</h3>
               <div class="video-info">${video.channel}</div>
             </div>`;
+
+          if (!isUnlocked) {
+              card.classList.add('locked');
+              cardContent += `<div class="lock-overlay">🔒</div>`;
+          }
+          card.innerHTML = cardContent;
           this.elements.videoFeed.appendChild(card);
         });
       },
+      
+      promptUnlock(index) {
+          this.state.videoToUnlock = index;
+          this.state.adsWatched = 0;
+          this.elements.adWatchCount.innerText = this.state.adsWatched;
+          this.elements.unlockModalOverlay.style.display = 'flex';
+      },
+      
+      hideUnlockModal() {
+          this.elements.unlockModalOverlay.style.display = 'none';
+      },
+      
+      async watchAd() {
+          const btn = this.elements.watchAdBtn;
+          btn.disabled = true;
+          btn.innerText = 'লোড হচ্ছে...';
+          
+          try {
+              await this.ads[this.state.currentAdIndex]();
+              this.state.adsWatched++;
+              this.elements.adWatchCount.innerText = this.state.adsWatched;
+
+              // Cycle to the next ad provider
+              this.state.currentAdIndex = (this.state.currentAdIndex + 1) % this.ads.length;
+
+              if (this.state.adsWatched >= 5) {
+                  this.unlockVideo();
+              }
+          } catch (error) {
+              console.error("Ad failed to show:", error);
+              // In case of an error, let's count it as watched so user is not stuck
+              this.state.adsWatched++;
+              this.elements.adWatchCount.innerText = this.state.adsWatched;
+              if (this.state.adsWatched >= 5) {
+                  this.unlockVideo();
+              }
+          } finally {
+              if (this.state.adsWatched < 5) {
+                btn.disabled = false;
+                btn.innerText = 'আবার বিজ্ঞাপন দেখুন';
+              }
+          }
+      },
+
+      unlockVideo() {
+          if (this.state.videoToUnlock !== null) {
+              this.state.unlockedVideos.push(this.state.videoToUnlock);
+              this.saveUnlockedState();
+              this.hideUnlockModal();
+              this.renderVideoFeed();
+              this.loadVideo(this.state.videoToUnlock, true);
+              this.state.videoToUnlock = null;
+          }
+      },
+      
+      saveUnlockedState() {
+          sessionStorage.setItem('unlockedVideos', JSON.stringify(this.state.unlockedVideos));
+      },
+
+      loadUnlockedState() {
+          const savedState = sessionStorage.getItem('unlockedVideos');
+          if (savedState) {
+              this.state.unlockedVideos = JSON.parse(savedState);
+          }
+      },
 
       loadVideo(index, autoplay = false) {
-        if (this.state.currentHlsInstance) {
-          this.state.currentHlsInstance.destroy();
-        }
+        if (this.state.currentHlsInstance) this.state.currentHlsInstance.destroy();
         this.state.currentHlsInstance = null;
         this.state.activeVideoElement = null;
         this.elements.playerContainer.innerHTML = `<div class="loading-indicator">লোড হচ্ছে...</div>`;
@@ -369,13 +546,9 @@
         const videoData = this.config.videos[index];
         const url = videoData.url;
 
-        if (this.isVideoType(url, 'direct')) {
-          this.createDirectVideoPlayer(url, autoplay);
-        } else if (this.isVideoType(url, 'hls')) {
-          this.createHlsPlayer(url, autoplay);
-        } else {
-          this.createIframePlayer(url, autoplay);
-        }
+        if (this.isVideoType(url, 'direct')) this.createDirectVideoPlayer(url, autoplay);
+        else if (this.isVideoType(url, 'hls')) this.createHlsPlayer(url, autoplay);
+        else this.createIframePlayer(url, autoplay);
       },
       
       createIframePlayer(url, autoplay) {
@@ -383,12 +556,11 @@
         const urlObj = new URL(url);
         if (autoplay) {
             urlObj.searchParams.set('autoplay', '1');
-            urlObj.searchParams.set('muted', '1'); // Mute for autoplay in iframes
+            urlObj.searchParams.set('muted', '1');
         }
         iframe.src = urlObj.toString();
         iframe.allow = 'autoplay; fullscreen; picture-in-picture';
         iframe.setAttribute('allowfullscreen', '');
-        
         this.elements.playerContainer.innerHTML = '';
         this.elements.playerContainer.appendChild(iframe);
       },
@@ -396,7 +568,6 @@
       createHlsPlayer(url, autoplay) {
         const video = this.createVideoElement(autoplay);
         this.elements.playerContainer.innerHTML = ''; 
-
         if (Hls.isSupported()) {
           const hls = new Hls();
           hls.loadSource(url);
@@ -408,7 +579,6 @@
           this.elements.playerContainer.innerHTML = `<div class="error-message">HLS সাপোর্ট করে না।</div>`;
           return;
         }
-        
         this.elements.playerContainer.appendChild(video);
         this.state.activeVideoElement = video;
       },
@@ -416,7 +586,6 @@
       createDirectVideoPlayer(url, autoplay) {
         const video = this.createVideoElement(autoplay);
         video.src = url;
-        
         this.elements.playerContainer.innerHTML = '';
         this.elements.playerContainer.appendChild(video);
         this.state.activeVideoElement = video;
@@ -425,8 +594,8 @@
       createVideoElement(autoplay) {
         const video = document.createElement('video');
         video.autoplay = autoplay;
-        video.muted = true; // IMPORTANT for autoplay to work
-        video.playsInline = true; // Important for iOS
+        video.muted = true;
+        video.playsInline = true;
         video.controls = true;
         video.preload = 'metadata'; 
         return video;
@@ -438,15 +607,10 @@
             const tapLength = currentTime - this.state.lastTap;
             if (tapLength < 300 && tapLength > 0) {
                 if (!this.state.activeVideoElement) return;
-
                 const rect = e.target.getBoundingClientRect();
                 const tapPosition = (e.changedTouches[0].clientX - rect.left) / rect.width;
-
-                if (tapPosition > 0.5) { // ডান দিকে ট্যাপ
-                    this.state.activeVideoElement.currentTime += 10;
-                } else { // বাম দিকে ট্যাপ
-                    this.state.activeVideoElement.currentTime -= 10;
-                }
+                if (tapPosition > 0.5) this.state.activeVideoElement.currentTime += 10;
+                else this.state.activeVideoElement.currentTime -= 10;
                 e.preventDefault();
             }
             this.state.lastTap = currentTime;
@@ -455,9 +619,7 @@
 
       highlightActiveCard(index) {
         const allCards = this.elements.videoFeed.querySelectorAll('.video-card');
-        allCards.forEach((card, i) => {
-          card.classList.toggle('active', i === index);
-        });
+        allCards.forEach((card, i) => card.classList.toggle('active', i === index));
       },
 
       isVideoType(url, type) {
@@ -469,14 +631,8 @@
       }
     };
 
-    document.addEventListener('DOMContentLoaded', () => {
-      VideoPlayerApp.init();
-    });
-
+    document.addEventListener('DOMContentLoaded', () => VideoPlayerApp.init());
   </script>
-
-  <div id="container-8a6b3d5354aa7bbf803c2c5809ea5261"></div>
-  <script async="async" data-cfasync="false" src="//pl27789452.revenuecpmgate.com/8a6b3d5354aa7bbf803c2c5809ea5261/invoke.js"></script>
 
 </body>
 </html>
