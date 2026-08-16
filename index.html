@@ -6,7 +6,10 @@
   <title>VIRAL VIDEO LINK</title>
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
   
+  <!-- Telegram WebApp SDK -->
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -18,14 +21,16 @@
 
   <style>
     :root {
-      --bg-color: #0b0c0e;
-      --card-bg: #13151b;
-      --primary-gold: #ffab00;
-      --primary-gold-dark: #d99200;
-      --secondary-blue: #121927;
+      --bg-color: #08080c;
+      --surface-color: #121218;
+      --surface-card: #16161f;
+      --accent-yellow: #f5a623;
+      --accent-yellow-dark: #d48b16;
+      --accent-blue: #111827;
+      --border-blue: #1f2937;
       --text-primary: #ffffff;
       --text-secondary: #9ca3af;
-      --border-color: #1f232d;
+      --text-muted: #6b7280;
     }
 
     * {
@@ -33,85 +38,127 @@
     }
 
     html, body {
+      height: 100%;
       margin: 0;
       padding: 0;
+      font-family: 'Hind Siliguri', sans-serif;
       background-color: var(--bg-color);
       color: var(--text-primary);
-      font-family: 'Hind Siliguri', sans-serif;
-      padding-bottom: 70px; /* Space for bottom nav */
+      overflow-x: hidden;
     }
 
-    /* Top Header */
+    /* Screen Wrappers */
+    .login-screen {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      font-size: 1.2rem;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .app-container {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      padding-bottom: 70px; /* Space for bottom navigation */
+    }
+
+    .app-container.visible {
+      display: flex;
+    }
+
+    /* Header Styling */
     .app-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
       background-color: var(--bg-color);
-      border-bottom: 1px solid #1a1c23;
+      border-bottom: 2px solid #231b0c;
       position: sticky;
       top: 0;
       z-index: 100;
     }
 
-    .header-icon-btn {
-      background: none;
+    .header-icon {
+      background: transparent;
       border: none;
-      color: #fff;
-      font-size: 1.4rem;
+      color: var(--text-primary);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 4px;
     }
 
-    .brand-title {
-      font-size: 1.3rem;
-      font-weight: 800;
-      letter-spacing: 0.5px;
+    .logo-container {
       display: flex;
       align-items: center;
       gap: 6px;
-    }
-
-    .brand-title .badge {
-      background-color: var(--primary-gold);
-      color: #000;
-      padding: 2px 8px;
-      border-radius: 4px;
+      font-weight: 800;
       font-size: 1.2rem;
+      letter-spacing: 0.5px;
     }
 
-    /* Main Container */
-    .content-container {
-      padding: 12px;
-      max-width: 600px;
-      margin: 0 auto;
+    .logo-viral {
+      color: #ffffff;
     }
 
-    /* Login / Loading Screen */
-    .login-screen {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 80vh;
+    .logo-badge {
+      background-color: var(--accent-yellow);
+      color: #000000;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 800;
       font-size: 1.1rem;
-      color: var(--text-secondary);
     }
 
-    /* Video Player Area */
+    /* Search Bar Modal/Input */
+    .search-bar-container {
+      display: none;
+      padding: 10px 16px;
+      background-color: var(--surface-color);
+      border-bottom: 1px solid #222;
+    }
+
+    .search-bar-container.active {
+      display: block;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-blue);
+      background-color: #000;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent-yellow);
+    }
+
+    /* Main Player Sticky Top (When Active) */
+    .player-section {
+      width: 100%;
+      background-color: #000;
+      display: none;
+    }
+
+    .player-section.active {
+      display: block;
+    }
+
     .player-wrapper {
       position: relative;
       width: 100%;
-      background-color: #000;
       aspect-ratio: 16 / 9;
-      border-radius: 12px;
-      overflow: hidden;
-      margin-bottom: 16px;
-      display: none; /* Initially hidden until video clicked */
-    }
-
-    .player-wrapper.active {
+      background-color: #000;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -124,170 +171,208 @@
       border: none;
     }
 
-    /* Top Filter Buttons */
-    .top-filters {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 12px;
-      margin-bottom: 12px;
-    }
-
-    .filter-btn {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 12px 8px;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      text-align: center;
-      font-family: inherit;
-    }
-
-    .filter-btn.gold {
-      background: linear-gradient(135deg, #ffab00, #e69500);
-      color: #000;
-    }
-
-    .filter-btn.dark {
-      background-color: var(--secondary-blue);
-      border: 1px solid #1e293b;
-      color: #fff;
-    }
-
-    .filter-btn .main-text {
-      font-size: 1rem;
-      font-weight: 700;
-    }
-
-    .filter-btn .sub-text {
-      font-size: 0.7rem;
-      font-weight: 600;
-      opacity: 0.85;
-      text-transform: uppercase;
-      margin-top: 2px;
-    }
-
-    /* Category Scroll Pills */
-    .category-scroll {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 8px;
-      margin-bottom: 12px;
-      scrollbar-width: none;
-    }
-    .category-scroll::-webkit-scrollbar { display: none; }
-
-    .chip {
-      background-color: #1a1d26;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      font-weight: 600;
-      white-space: nowrap;
-      border: 1px solid var(--border-color);
-      cursor: pointer;
-    }
-
-    .chip.active {
-      background-color: var(--primary-gold);
-      color: #000;
-      border-color: var(--primary-gold);
-    }
-
-    /* Notice Marquee Bar */
-    .notice-bar {
-      background-color: #161820;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 8px 12px;
-      font-size: 0.85rem;
-      color: #d1d5db;
-      margin-bottom: 16px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      overflow: hidden;
-      white-space: nowrap;
-    }
-
-    .section-heading {
-      font-size: 1.4rem;
-      font-weight: 800;
-      margin: 0 0 12px 0;
-    }
-
-    /* Video Feed & Cards */
-    .video-feed {
+    /* Main Body Area */
+    .main-content {
+      padding: 14px 14px;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }
 
-    .video-card {
-      background-color: var(--card-bg);
-      border-radius: 12px;
-      overflow: hidden;
-      border: 1px solid var(--border-color);
-      display: flex;
-      flex-direction: column;
+    /* Top Switcher Buttons */
+    .top-switcher {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
     }
 
-    .thumbnail-box {
+    .switch-btn {
+      border: none;
+      border-radius: 12px;
+      padding: 10px 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.1s ease;
+    }
+
+    .switch-btn:active {
+      transform: scale(0.98);
+    }
+
+    .switch-btn.all-videos {
+      background-color: var(--accent-yellow);
+      color: #000000;
+    }
+
+    .switch-btn.trending {
+      background-color: var(--accent-blue);
+      color: #ffffff;
+      border: 1px solid var(--border-blue);
+    }
+
+    .switch-btn .btn-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .switch-btn .btn-sub {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-top: 3px;
+      opacity: 0.85;
+    }
+
+    /* Category Filter Pills Horizontal Scroll */
+    .category-pills {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 4px;
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .category-pills::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
+    }
+
+    .pill-item {
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background-color: var(--surface-color);
+      color: var(--text-primary);
+      border: 1px solid #222;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .pill-item.active {
+      background-color: var(--accent-yellow);
+      color: #000000;
+      border-color: var(--accent-yellow);
+    }
+
+    /* Notice Marquee / Banner */
+    .notice-banner {
+      background-color: rgba(22, 22, 31, 0.9);
+      border: 1px solid #2a2a38;
+      border-radius: 30px;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      font-size: 0.85rem;
+      color: #e2e8f0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Section Title */
+    .section-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 4px 0 0 0;
+      color: var(--text-primary);
+    }
+
+    /* Video Feed List */
+    .video-feed {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* Single Video Card Styling */
+    .video-card {
+      background-color: var(--surface-card);
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid #22222d;
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+      transition: border-color 0.2s ease;
+      position: relative;
+    }
+
+    .video-card.active {
+      border-color: var(--accent-yellow);
+    }
+
+    /* Thumbnail Area */
+    .thumbnail-wrapper {
       position: relative;
       width: 100%;
       aspect-ratio: 16 / 9;
       background-color: #000;
-      cursor: pointer;
     }
 
-    .thumbnail-box img {
+    .thumbnail-wrapper img {
       width: 100%;
       height: 100%;
       object-fit: cover;
+      display: block;
     }
 
+    /* Play Icon Overlay badge on thumbnail top-right */
+    .play-badge {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      color: #ff3b30;
+      font-size: 1.1rem;
+      z-index: 2;
+    }
+
+    /* Duration badge bottom-right */
     .duration-badge {
       position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: rgba(0, 0, 0, 0.85);
-      color: #fff;
-      padding: 2px 6px;
+      bottom: 10px;
+      right: 10px;
+      background-color: rgba(0, 0, 0, 0.85);
+      color: #ffffff;
+      padding: 3px 8px;
       border-radius: 4px;
       font-size: 0.75rem;
-      font-weight: 600;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      z-index: 2;
     }
 
-    .play-watermark {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      color: #ff4d4d;
-      font-size: 1.2rem;
-    }
-
-    .video-card.locked .thumbnail-box::after {
+    /* Lock Overlay */
+    .video-card.locked .thumbnail-wrapper::before {
       content: '';
       position: absolute;
       inset: 0;
-      background: rgba(0,0,0,0.6);
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 3;
     }
 
-    .lock-icon {
+    .lock-overlay-icon {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      font-size: 2rem;
-      z-index: 2;
+      font-size: 2.2rem;
+      color: white;
+      z-index: 4;
+      text-shadow: 0 0 8px rgba(0,0,0,0.8);
     }
 
-    .video-content {
-      padding: 12px;
+    /* Card Details Body */
+    .card-body {
+      padding: 12px 14px 14px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
     }
 
     .title-row {
@@ -295,69 +380,83 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 12px;
-      margin-bottom: 12px;
     }
 
     .video-title {
-      font-size: 0.95rem;
+      font-size: 1rem;
       font-weight: 600;
-      line-height: 1.4;
+      line-height: 1.35;
+      color: var(--text-primary);
       margin: 0;
-      color: #fff;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      flex: 1;
     }
 
     .share-btn {
-      background-color: #272013;
-      border: 1px solid #4d3a14;
-      color: var(--primary-gold);
+      background-color: #262630;
+      border: none;
       width: 36px;
       height: 36px;
-      border-radius: 8px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
+      transition: background-color 0.2s;
     }
 
-    .meta-row {
+    .share-btn:hover {
+      background-color: var(--accent-yellow);
+    }
+
+    .share-btn:hover svg {
+      fill: #000;
+    }
+
+    .share-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: #f5a623;
+    }
+
+    /* Meta Stats Row (Views, Likes, Date) */
+    .stats-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 10px;
       font-size: 0.8rem;
       color: var(--text-secondary);
     }
 
-    .stats-group {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
     .stat-pill {
-      background-color: #1b1e27;
-      padding: 4px 8px;
-      border-radius: 12px;
-      display: flex;
+      background-color: #1f1f2a;
+      padding: 4px 10px;
+      border-radius: 14px;
+      display: inline-flex;
       align-items: center;
-      gap: 4px;
-      font-size: 0.75rem;
-      color: #d1d5db;
+      gap: 5px;
+      font-weight: 500;
     }
 
-    /* Fixed Bottom Nav */
+    .time-ago {
+      margin-left: auto;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+    }
+
+    /* Fixed Bottom Navigation Bar */
     .bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      height: 60px;
-      background-color: #0b0c0e;
-      border-top: 1px solid #1a1c23;
+      height: 62px;
+      background-color: #050508;
+      border-top: 1px solid #1a1a24;
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -369,171 +468,251 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: none;
+      gap: 3px;
+      background: transparent;
       border: none;
-      color: var(--text-secondary);
+      color: var(--text-muted);
       font-family: inherit;
       font-size: 0.8rem;
-      width: 45%;
-      height: 42px;
-      border-radius: 8px;
+      font-weight: 600;
       cursor: pointer;
+      width: 40%;
+      padding: 6px 0;
+      border-radius: 12px;
     }
 
     .nav-item.active {
-      background-color: #221a0d;
-      color: var(--primary-gold);
-      font-weight: 700;
+      color: var(--accent-yellow);
+      background-color: rgba(245, 166, 35, 0.1);
     }
 
     .nav-item svg {
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       fill: currentColor;
-      margin-bottom: 2px;
     }
 
-    /* Unlock Modal */
-    .modal-overlay {
+    /* Profile View Layout */
+    .profile-view {
+      display: none;
+      padding: 20px;
+      text-align: center;
+    }
+
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--accent-yellow);
+      color: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;
+      margin: 0 auto 12px auto;
+    }
+
+    /* Unlock Modal Popup */
+    .unlock-modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0, 0, 0, 0.8);
       display: none;
       align-items: center;
       justify-content: center;
       z-index: 2000;
+      padding: 16px;
     }
 
-    .modal-body {
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: 12px;
+    .unlock-modal {
+      background: var(--surface-color);
+      padding: 24px;
+      border-radius: 16px;
       text-align: center;
-      width: 90%;
-      max-width: 340px;
-      border: 1px solid var(--border-color);
+      width: 100%;
+      max-width: 360px;
+      border: 1px solid var(--border-blue);
     }
 
-    .modal-body h3 {
+    .unlock-modal h3 {
       margin-top: 0;
+      color: var(--text-primary);
+    }
+
+    .unlock-modal p {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
     }
 
     .ad-counter {
-      font-size: 1.4rem;
+      font-size: 1.5rem;
       font-weight: 700;
-      color: var(--primary-gold);
-      margin: 12px 0;
+      color: var(--accent-yellow);
+      margin: 16px 0;
     }
 
-    .btn-primary {
-      background-color: var(--primary-gold);
-      color: #000;
-      font-weight: 700;
+    #watch-ad-btn {
+      background-color: var(--accent-yellow);
+      color: #000000;
       border: none;
-      padding: 10px;
-      border-radius: 8px;
-      width: 100%;
+      padding: 12px 24px;
+      border-radius: 10px;
       cursor: pointer;
+      font-size: 1rem;
+      font-weight: 700;
+      width: 100%;
       font-family: inherit;
     }
 
-    .btn-close {
-      background: transparent;
-      color: var(--text-secondary);
+    #watch-ad-btn:disabled {
+      background-color: var(--text-muted);
+      cursor: not-allowed;
+    }
+
+    .close-modal-btn {
+      background: #22222e;
+      color: var(--text-primary);
       border: none;
-      margin-top: 8px;
+      padding: 10px 16px;
+      border-radius: 8px;
       cursor: pointer;
+      margin-top: 12px;
+      width: 100%;
+      font-family: inherit;
+    }
+
+    .loading-indicator, .error-message {
+      font-size: 1.1rem;
+      color: var(--text-secondary);
+      text-align: center;
+      padding: 20px;
     }
   </style>
 </head>
 <body>
 
-  <!-- Header -->
-  <header class="app-header">
-    <button class="header-icon-btn">
-      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-    </button>
-    <div class="brand-title">
-      VIRAL <span class="badge">VIDEO LINK</span>
-    </div>
-    <button class="header-icon-btn">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-    </button>
-  </header>
+  <!-- Initial Telegram Login/Connecting Screen -->
+  <div class="login-screen" id="login-screen">
+    <div class="loading-indicator">সংযোগ করা হচ্ছে...</div>
+  </div>
 
-  <div class="content-container">
+  <!-- Main App Shell -->
+  <div class="app-container" id="app-container">
     
-    <div class="login-screen" id="login-screen">
-      <div>সংযোগ করা হচ্ছে...</div>
+    <!-- Top Header -->
+    <header class="app-header">
+      <button class="header-icon" id="menu-btn" aria-label="Menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+        </svg>
+      </button>
+
+      <div class="logo-container">
+        <span class="logo-viral">VIRAL</span>
+        <span class="logo-badge">VIDEO LINK</span>
+      </div>
+
+      <button class="header-icon" id="search-toggle-btn" aria-label="Search">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- Expandable Search Input -->
+    <div class="search-bar-container" id="search-bar-container">
+      <input type="text" id="search-input" class="search-input" placeholder="ভিডিও খুঁজুন...">
     </div>
 
-    <div id="main-app" style="display: none;">
-      
-      <!-- Video Player Wrapper -->
+    <!-- Active Video Player Container (Shows at top when playing) -->
+    <div class="player-section" id="player-section">
       <div class="player-wrapper" id="player-container"></div>
+    </div>
 
-      <!-- Main Filter Buttons -->
-      <div class="top-filters">
-        <button class="filter-btn gold">
-          <span class="main-text">All Videos</span>
-          <span class="sub-text">NEWEST POSTS FIRST</span>
+    <!-- Main Home Page Content -->
+    <main class="main-content" id="home-view">
+      
+      <!-- Top Switcher Buttons (All Videos vs Trending) -->
+      <div class="top-switcher">
+        <button class="switch-btn all-videos" id="btn-all-main">
+          <span class="btn-title">All Videos</span>
+          <span class="btn-sub">NEWEST POSTS FIRST</span>
         </button>
-        <button class="filter-btn dark">
-          <span class="main-text">Trending</span>
-          <span class="sub-text">MOST VIEWED FIRST</span>
+        <button class="switch-btn trending" id="btn-trending-main">
+          <span class="btn-title">Trending</span>
+          <span class="btn-sub">MOST VIEWED FIRST</span>
         </button>
       </div>
 
-      <!-- Categories Scroll Pills -->
-      <div class="category-scroll">
-        <div class="chip active">All Videos</div>
-        <div class="chip">viral videos || ভাইরাল ভিডিও</div>
-        <div class="chip">Movies</div>
+      <!-- Horizontal Scrollable Category Pills -->
+      <div class="category-pills">
+        <div class="pill-item active" data-category="all">All Videos</div>
+        <div class="pill-item" data-category="viral">viral videos || ভাইরাল ভিডিও</div>
+        <div class="pill-item" data-category="movie">Movies / নাটক</div>
       </div>
 
-      <!-- Marquee Notice -->
-      <div class="notice-bar">
-        <span>🔒 | 📢 বেশি শেয়ার = বেশি ভিডিও 🔥 আপনার একটুখানি শেয়ার আমাদের অনুপ্রেরণা...</span>
+      <!-- Marquee Notice Banner -->
+      <div class="notice-banner">
+        <span>📢 বেশি শেয়ার = বেশি ভিডিও 🔥 আপনার একটুখানি শেয়ার আমাদের অনুপ্রেরণা...</span>
       </div>
 
-      <!-- Heading -->
-      <h2 class="section-heading">Latest Videos</h2>
+      <!-- Section Title -->
+      <h2 class="section-title">Latest Videos</h2>
 
-      <!-- Video Feed List -->
+      <!-- Video Feed Grid -->
       <div class="video-feed" id="video-feed"></div>
 
+    </main>
+
+    <!-- Profile Screen View (Toggled via bottom nav) -->
+    <div class="profile-view" id="profile-view">
+      <div class="profile-avatar" id="user-avatar-initial">U</div>
+      <h3 id="profile-name">User Name</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">টেলিগ্রাম থেকে স্বাগতম!</p>
     </div>
+
+    <!-- Fixed Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" id="nav-home">
+        <svg viewBox="0 0 24 24">
+          <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+        </svg>
+        <span>Home</span>
+      </button>
+
+      <button class="nav-item" id="nav-profile">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+        </svg>
+        <span>Profile</span>
+      </button>
+    </nav>
+
   </div>
 
-  <!-- Bottom Navigation -->
-  <nav class="bottom-nav">
-    <button class="nav-item active">
-      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
-      Home
-    </button>
-    <button class="nav-item">
-      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-      Profile
-    </button>
-  </nav>
-
-  <!-- Unlock Modal -->
-  <div class="modal-overlay" id="unlock-modal">
-    <div class="modal-body">
+  <!-- Ad Unlock Modal -->
+  <div class="unlock-modal-overlay" id="unlock-modal-overlay">
+    <div class="unlock-modal">
       <h3>🔒 ভিডিওটি লক করা</h3>
-      <p style="color: var(--text-secondary); font-size: 0.9rem;">এই ভিডিওটি আনলক করতে ৫টি বিজ্ঞাপন দেখুন।</p>
+      <p>এই ভিডিওটি আনলক করতে নিচের বাটনে ক্লিক করে ৫টি বিজ্ঞাপন দেখুন।</p>
       <div class="ad-counter">
-        <span id="ad-count">০</span> / ৫
+        <span id="ad-watch-count">০</span> / ৫টি বিজ্ঞাপন দেখা হয়েছে
       </div>
-      <button class="btn-primary" id="watch-ad-btn">বিজ্ঞাপন দেখুন</button>
-      <button class="btn-close" id="close-modal-btn">বন্ধ করুন</button>
+      <button id="watch-ad-btn">বিজ্ঞাপন দেখুন</button>
+      <button class="close-modal-btn" id="close-modal-btn">বন্ধ করুন</button>
     </div>
   </div>
 
+  <!-- HLS Player SDK -->
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
   <script>
-    const VideoApp = {
-      config: { videos: [] },
+    const VideoPlayerApp = {
+      config: {
+        videos: []
+      },
+      
       firebaseConfig: {
         apiKey: "AIzaSyA6JPDxbD5k1S-7bNikp6U_vFALPFl_fto",
         authDomain: "daily-paybot.firebaseapp.com",
@@ -545,190 +724,400 @@
       },
 
       state: {
-        currentHls: null,
-        unlockedVideos: [0],
+        currentHlsInstance: null,
+        activeVideoElement: null,
+        lastTap: 0,
+        telegramUser: null,
+        unlockedVideos: [0], // First video unlocked by default
         adsWatched: 0,
         videoToUnlock: null,
-        currentAdIndex: 0
+        currentAdIndex: 0,
+        currentFilter: 'all',
+        searchQuery: ''
       },
 
       elements: {
+        playerSection: document.getElementById('player-section'),
         playerContainer: document.getElementById('player-container'),
         videoFeed: document.getElementById('video-feed'),
         loginScreen: document.getElementById('login-screen'),
-        mainApp: document.getElementById('main-app'),
-        unlockModal: document.getElementById('unlock-modal'),
-        adCount: document.getElementById('ad-count'),
+        appContainer: document.getElementById('app-container'),
+        unlockModalOverlay: document.getElementById('unlock-modal-overlay'),
+        adWatchCount: document.getElementById('ad-watch-count'),
         watchAdBtn: document.getElementById('watch-ad-btn'),
-        closeModalBtn: document.getElementById('close-modal-btn')
+        closeModalBtn: document.getElementById('close-modal-btn'),
+        searchToggleBtn: document.getElementById('search-toggle-btn'),
+        searchBarContainer: document.getElementById('search-bar-container'),
+        searchInput: document.getElementById('search-input'),
+        navHome: document.getElementById('nav-home'),
+        navProfile: document.getElementById('nav-profile'),
+        homeView: document.getElementById('home-view'),
+        profileView: document.getElementById('profile-view'),
+        profileName: document.getElementById('profile-name'),
+        userAvatarInitial: document.getElementById('user-avatar-initial')
       },
-
+      
       ads: [
-        () => new Promise((resolve) => { try { LibTl.SDK.show(10117142); resolve(); } catch(e){ resolve(); } }),
-        () => new Promise((resolve) => { window.showGiga ? window.showGiga().then(resolve).catch(resolve) : resolve(); }),
-        () => new Promise((resolve) => { try { new AdexiumWidget({wid: '6052f786-5400-4390-a082-0c893fc47da3', adFormat: 'push-like'}).autoMode(); resolve(); } catch(e){ resolve(); } }),
-        () => new Promise((resolve) => { window.showAdexora ? window.showAdexora().then(resolve).catch(resolve) : resolve(); }),
-        () => new Promise((resolve) => { try { LibTl.SDK.show(10056357); resolve(); } catch(e){ resolve(); } })
+        () => new Promise((resolve, reject) => { 
+          try { if (window.LibTl && LibTl.SDK) LibTl.SDK.show(10117142); resolve(); } catch (e) { reject(e); } 
+        }),
+        () => new Promise((resolve, reject) => { 
+          if (typeof window.showGiga === 'function') { window.showGiga().then(resolve).catch(reject); } else resolve(); 
+        }),
+        () => new Promise((resolve, reject) => { 
+          try { 
+            if (typeof AdexiumWidget !== 'undefined') {
+              const adexiumWidget = new AdexiumWidget({wid: '6052f786-5400-4390-a082-0c893fc47da3', adFormat: 'push-like'}); 
+              adexiumWidget.autoMode(); 
+            }
+            resolve(); 
+          } catch(e) { reject(e); } 
+        }),
+        () => new Promise((resolve, reject) => { 
+          if (typeof window.showAdexora === 'function') { window.showAdexora().then(resolve).catch(reject); } else resolve(); 
+        }),
+        () => new Promise((resolve, reject) => { 
+          try { if (window.LibTl && LibTl.SDK) LibTl.SDK.show(10056357); resolve(); } catch (e) { reject(e); } 
+        })
       ],
-
+      
       init() {
         this.loadUnlockedState();
-        this.addEvents();
+        this.addEventListeners();
         this.handleTelegramLogin();
       },
-
-      addEvents() {
+      
+      addEventListeners() {
         this.elements.watchAdBtn.onclick = () => this.watchAd();
-        this.elements.closeModalBtn.onclick = () => this.elements.unlockModal.style.display = 'none';
-      },
+        this.elements.closeModalBtn.onclick = () => this.hideUnlockModal();
 
+        // Search Toggle
+        this.elements.searchToggleBtn.onclick = () => {
+          this.elements.searchBarContainer.classList.toggle('active');
+          if (this.elements.searchBarContainer.classList.contains('active')) {
+            this.elements.searchInput.focus();
+          }
+        };
+
+        // Live Search Input Filter
+        this.elements.searchInput.oninput = (e) => {
+          this.state.searchQuery = e.target.value.toLowerCase();
+          this.renderVideoFeed();
+        };
+
+        // Navigation Tabs (Home vs Profile)
+        this.elements.navHome.onclick = () => {
+          this.elements.navHome.classList.add('active');
+          this.elements.navProfile.classList.remove('active');
+          this.elements.homeView.style.display = 'flex';
+          this.elements.profileView.style.display = 'none';
+        };
+
+        this.elements.navProfile.onclick = () => {
+          this.elements.navProfile.classList.add('active');
+          this.elements.navHome.classList.remove('active');
+          this.elements.homeView.style.display = 'none';
+          this.elements.profileView.style.display = 'block';
+        };
+
+        // Category Pill Click Event
+        document.querySelectorAll('.pill-item').forEach(pill => {
+          pill.onclick = () => {
+            document.querySelectorAll('.pill-item').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            this.state.currentFilter = pill.dataset.category;
+            this.renderVideoFeed();
+          };
+        });
+
+        // Top Buttons (All Videos vs Trending)
+        document.getElementById('btn-all-main').onclick = () => {
+          this.state.searchQuery = '';
+          this.renderVideoFeed();
+        };
+
+        document.getElementById('btn-trending-main').onclick = () => {
+          // Sort videos by views descending
+          this.renderVideoFeed(true);
+        };
+      },
+      
       handleTelegramLogin() {
         const tg = window.Telegram.WebApp;
         tg.ready();
+
         if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-          this.initFirebase();
+          this.state.telegramUser = tg.initDataUnsafe.user;
+          const name = `${this.state.telegramUser.first_name} ${this.state.telegramUser.last_name || ''}`;
+          this.elements.profileName.innerText = name;
+          this.elements.userAvatarInitial.innerText = this.state.telegramUser.first_name.charAt(0).toUpperCase();
+          this.initializeFirebase();
         } else {
-          // Fallback testing outside Telegram
-          this.initFirebase();
+          // Fallback if accessed outside Telegram
+          this.elements.profileName.innerText = "ব্যবহারকারী";
+          this.initializeFirebase();
         }
       },
-
-      initFirebase() {
+      
+      initializeFirebase() {
         firebase.initializeApp(this.firebaseConfig);
         const db = firebase.database();
-        db.ref('/videos').on('value', (snapshot) => {
+        const videosRef = db.ref('/videos');
+
+        videosRef.on('value', (snapshot) => {
           const data = snapshot.val();
           if (data && Array.isArray(data)) {
-            this.config.videos = data.filter(v => v && v.url);
+            this.config.videos = data.filter(video => video && video.url);
             this.showApp();
           } else {
-            this.elements.loginScreen.innerText = "কোনো ভিডিও পাওয়া যায়নি।";
+            this.elements.loginScreen.innerHTML = `<div class="error-message">ডাটাবেস থেকে কোনো ভিডিও খুঁজে পাওয়া যায়নি।</div>`;
           }
+        }, (error) => {
+          this.elements.loginScreen.innerHTML = `<div class="error-message">ডাটাবেস সংযোগে সমস্যা হয়েছে।</div>`;
         });
       },
 
       showApp() {
         this.elements.loginScreen.style.display = 'none';
-        this.elements.mainApp.style.display = 'block';
-        this.renderFeed();
+        this.elements.appContainer.classList.add('visible');
+        this.renderVideoFeed();
+        this.addDoubleTapListener();
       },
 
-      renderFeed() {
+      renderVideoFeed(sortByTrending = false) {
         this.elements.videoFeed.innerHTML = '';
-        this.config.videos.forEach((video, index) => {
-          const isUnlocked = this.state.unlockedVideos.includes(index);
+        
+        let displayVideos = [...this.config.videos];
+
+        // Search Filter
+        if (this.state.searchQuery) {
+          displayVideos = displayVideos.filter(v => v.title && v.title.toLowerCase().includes(this.state.searchQuery));
+        }
+
+        // Sort by Trending (Views)
+        if (sortByTrending) {
+          displayVideos.sort((a, b) => (b.views || 0) - (a.views || 0));
+        }
+
+        if (displayVideos.length === 0) {
+          this.elements.videoFeed.innerHTML = `<div class="error-message">কোনো ভিডিও পাওয়া যায়নি।</div>`;
+          return;
+        }
+
+        displayVideos.forEach((video, index) => {
+          const originalIndex = this.config.videos.indexOf(video);
+          const isUnlocked = this.state.unlockedVideos.includes(originalIndex);
+
           const card = document.createElement('div');
-          card.className = `video-card ${isUnlocked ? '' : 'locked'}`;
+          card.className = `video-card ${!isUnlocked ? 'locked' : ''}`;
+          
+          card.onclick = () => {
+            if (isUnlocked) {
+              this.elements.playerSection.classList.add('active');
+              this.loadVideo(originalIndex, true);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+              this.promptUnlock(originalIndex);
+            }
+          };
+
+          const viewsCount = video.views || Math.floor(Math.random() * 800) + 100;
+          const likesCount = video.likes || Math.floor(Math.random() * 50) + 5;
+          const timeAgo = video.timeAgo || '2 month ago';
 
           card.innerHTML = `
-            <div class="thumbnail-box" onclick="VideoApp.onVideoClick(${index})">
-              <img src="${video.thumbnail}" alt="${video.title}">
-              <span class="duration-badge">${video.duration || '4K 2:07:33'}</span>
-              <span class="play-watermark">▶</span>
-              ${!isUnlocked ? '<div class="lock-icon">🔒</div>' : ''}
+            <div class="thumbnail-wrapper">
+              <img src="${video.thumbnail}" alt="${video.title}" loading="lazy">
+              <div class="play-badge">▶</div>
+              <span class="duration-badge">${video.duration || '00:00'}</span>
+              ${!isUnlocked ? '<div class="lock-overlay-icon">🔒</div>' : ''}
             </div>
-            <div class="video-content">
+            <div class="card-body">
               <div class="title-row">
                 <h3 class="video-title">${video.title}</h3>
-                <button class="share-btn">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                <button class="share-btn" title="Share" onclick="event.stopPropagation(); VideoPlayerApp.shareVideo('${video.title}', '${video.url}')">
+                  <svg viewBox="0 0 24 24">
+                    <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z"/>
+                  </svg>
                 </button>
               </div>
-              <div class="meta-row">
-                <div class="stats-group">
-                  <span class="stat-pill">👁️ ${video.views || '796'}</span>
-                  <span class="stat-pill">❤️ ${video.likes || '13'}</span>
-                </div>
-                <span>${video.timeAgo || '2 month ago'}</span>
+              <div class="stats-row">
+                <span class="stat-pill">👁️ ${viewsCount}</span>
+                <span class="stat-pill">❤️ ${likesCount}</span>
+                <span class="time-ago">${timeAgo}</span>
               </div>
             </div>
           `;
+
           this.elements.videoFeed.appendChild(card);
         });
       },
 
-      onVideoClick(index) {
-        if (this.state.unlockedVideos.includes(index)) {
-          this.loadVideo(index);
+      shareVideo(title, url) {
+        if (navigator.share) {
+          navigator.share({ title: title, url: url }).catch(() => {});
         } else {
-          this.promptUnlock(index);
+          const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
+          window.open(shareUrl, '_blank');
         }
       },
-
+      
       promptUnlock(index) {
         this.state.videoToUnlock = index;
         this.state.adsWatched = 0;
-        this.elements.adCount.innerText = "০";
-        this.elements.unlockModal.style.display = 'flex';
+        this.elements.adWatchCount.innerText = "০";
+        this.elements.unlockModalOverlay.style.display = 'flex';
       },
-
+      
+      hideUnlockModal() {
+        this.elements.unlockModalOverlay.style.display = 'none';
+      },
+      
       async watchAd() {
         const btn = this.elements.watchAdBtn;
         btn.disabled = true;
         btn.innerText = 'লোড হচ্ছে...';
+        
+        try {
+          await this.ads[this.state.currentAdIndex]();
+          this.state.adsWatched++;
+          this.elements.adWatchCount.innerText = this.state.adsWatched;
 
-        await this.ads[this.state.currentAdIndex]();
-        this.state.adsWatched++;
-        this.elements.adCount.innerText = this.state.adsWatched;
-        this.state.currentAdIndex = (this.state.currentAdIndex + 1) % this.ads.length;
+          this.state.currentAdIndex = (this.state.currentAdIndex + 1) % this.ads.length;
 
-        if (this.state.adsWatched >= 5) {
+          if (this.state.adsWatched >= 5) {
+            this.unlockVideo();
+          }
+        } catch (error) {
+          console.error("Ad failed:", error);
+          this.state.adsWatched++;
+          this.elements.adWatchCount.innerText = this.state.adsWatched;
+          if (this.state.adsWatched >= 5) {
+            this.unlockVideo();
+          }
+        } finally {
+          if (this.state.adsWatched < 5) {
+            btn.disabled = false;
+            btn.innerText = 'আবার বিজ্ঞাপন দেখুন';
+          }
+        }
+      },
+
+      unlockVideo() {
+        if (this.state.videoToUnlock !== null) {
           this.state.unlockedVideos.push(this.state.videoToUnlock);
           this.saveUnlockedState();
-          this.elements.unlockModal.style.display = 'none';
-          this.renderFeed();
-          this.loadVideo(this.state.videoToUnlock);
+          this.hideUnlockModal();
+          this.renderVideoFeed();
+          this.elements.playerSection.classList.add('active');
+          this.loadVideo(this.state.videoToUnlock, true);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          this.state.videoToUnlock = null;
         }
-
-        btn.disabled = false;
-        btn.innerText = 'বিজ্ঞাপন দেখুন';
       },
-
-      loadVideo(index) {
-        const video = this.config.videos[index];
-        const container = this.elements.playerContainer;
-        container.classList.add('active');
-        container.innerHTML = '';
-
-        if (video.url.includes('.m3u8')) {
-          const videoEl = document.createElement('video');
-          videoEl.controls = true;
-          videoEl.autoplay = true;
-          if (Hls.isSupported()) {
-            const hls = new Hls();
-            hls.loadSource(video.url);
-            hls.attachMedia(videoEl);
-          } else {
-            videoEl.src = video.url;
-          }
-          container.appendChild(videoEl);
-        } else if (video.url.match(/\.(mp4|webm)/)) {
-          const videoEl = document.createElement('video');
-          videoEl.controls = true;
-          videoEl.autoplay = true;
-          videoEl.src = video.url;
-          container.appendChild(videoEl);
-        } else {
-          const iframe = document.createElement('iframe');
-          iframe.src = video.url;
-          iframe.allow = "autoplay; fullscreen";
-          container.appendChild(iframe);
-        }
-
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      },
-
+      
       saveUnlockedState() {
         localStorage.setItem('unlockedVideos', JSON.stringify(this.state.unlockedVideos));
       },
 
       loadUnlockedState() {
-        const saved = localStorage.getItem('unlockedVideos');
-        if (saved) this.state.unlockedVideos = JSON.parse(saved);
+        const savedState = localStorage.getItem('unlockedVideos');
+        if (savedState) {
+          this.state.unlockedVideos = JSON.parse(savedState);
+        }
+      },
+
+      loadVideo(index, autoplay = false) {
+        if (this.state.currentHlsInstance) this.state.currentHlsInstance.destroy();
+        this.state.currentHlsInstance = null;
+        this.state.activeVideoElement = null;
+        this.elements.playerContainer.innerHTML = `<div class="loading-indicator">লোড হচ্ছে...</div>`;
+
+        const videoData = this.config.videos[index];
+        const url = videoData.url;
+
+        if (this.isVideoType(url, 'direct')) this.createDirectVideoPlayer(url, autoplay);
+        else if (this.isVideoType(url, 'hls')) this.createHlsPlayer(url, autoplay);
+        else this.createIframePlayer(url, autoplay);
+      },
+      
+      createIframePlayer(url, autoplay) {
+        const iframe = document.createElement('iframe');
+        const urlObj = new URL(url);
+        if (autoplay) {
+          urlObj.searchParams.set('autoplay', '1');
+          urlObj.searchParams.set('muted', '1');
+        }
+        iframe.src = urlObj.toString();
+        iframe.allow = 'autoplay; fullscreen; picture-in-picture';
+        iframe.setAttribute('allowfullscreen', '');
+        this.elements.playerContainer.innerHTML = '';
+        this.elements.playerContainer.appendChild(iframe);
+      },
+
+      createHlsPlayer(url, autoplay) {
+        const video = this.createVideoElement(autoplay);
+        this.elements.playerContainer.innerHTML = ''; 
+        if (Hls.isSupported()) {
+          const hls = new Hls();
+          hls.loadSource(url);
+          hls.attachMedia(video);
+          this.state.currentHlsInstance = hls;
+        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+          video.src = url;
+        } else {
+          this.elements.playerContainer.innerHTML = `<div class="error-message">HLS সাপোর্ট করে না।</div>`;
+          return;
+        }
+        this.elements.playerContainer.appendChild(video);
+        this.state.activeVideoElement = video;
+      },
+
+      createDirectVideoPlayer(url, autoplay) {
+        const video = this.createVideoElement(autoplay);
+        video.src = url;
+        this.elements.playerContainer.innerHTML = '';
+        this.elements.playerContainer.appendChild(video);
+        this.state.activeVideoElement = video;
+      },
+      
+      createVideoElement(autoplay) {
+        const video = document.createElement('video');
+        video.autoplay = autoplay;
+        video.muted = true;
+        video.playsInline = true;
+        video.controls = true;
+        video.preload = 'metadata'; 
+        return video;
+      },
+
+      addDoubleTapListener() {
+        this.elements.playerContainer.addEventListener('touchend', (e) => {
+          const currentTime = new Date().getTime();
+          const tapLength = currentTime - this.state.lastTap;
+          if (tapLength < 300 && tapLength > 0) {
+            if (!this.state.activeVideoElement) return;
+            const rect = e.target.getBoundingClientRect();
+            const tapPosition = (e.changedTouches[0].clientX - rect.left) / rect.width;
+            if (tapPosition > 0.5) this.state.activeVideoElement.currentTime += 10;
+            else this.state.activeVideoElement.currentTime -= 10;
+            e.preventDefault();
+          }
+          this.state.lastTap = currentTime;
+        });
+      },
+
+      isVideoType(url, type) {
+        const patterns = {
+          hls: /\.m3u8(\?|$)/i,
+          direct: /\.(mp4|webm|ogg)(\?|$)/i
+        };
+        return patterns[type] ? patterns[type].test(url) : false;
       }
     };
 
-    document.addEventListener('DOMContentLoaded', () => VideoApp.init());
+    document.addEventListener('DOMContentLoaded', () => VideoPlayerApp.init());
   </script>
+
 </body>
 </html>
