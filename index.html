@@ -3,11 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Premium Video Player for Telegram</title>
-  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;700&display=swap" rel="stylesheet">
+  <title>VIRAL VIDEO LINK</title>
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap" rel="stylesheet">
   
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
@@ -19,61 +18,100 @@
 
   <style>
     :root {
-      --bg-color: #121212;
-      --primary-surface-color: #1e1e1e;
-      --secondary-surface-color: #272727;
-      --text-primary: #f1f1f1;
-      --text-secondary: #aaa;
-      --accent-color: #3ea6ff;
-      --hover-bg-color: #333;
-      --scrollbar-thumb-color: #555;
-      --scrollbar-track-color: var(--primary-surface-color);
-      --lock-color: #ff5555;
+      --bg-color: #0b0c0e;
+      --card-bg: #13151b;
+      --primary-gold: #ffab00;
+      --primary-gold-dark: #d99200;
+      --secondary-blue: #121927;
+      --text-primary: #ffffff;
+      --text-secondary: #9ca3af;
+      --border-color: #1f232d;
+    }
+
+    * {
+      box-sizing: border-box;
     }
 
     html, body {
-      height: 100%;
       margin: 0;
       padding: 0;
-      overflow: hidden;
-      font-family: 'Hind Siliguri', sans-serif;
       background-color: var(--bg-color);
       color: var(--text-primary);
+      font-family: 'Hind Siliguri', sans-serif;
+      padding-bottom: 70px; /* Space for bottom nav */
     }
 
-    .app-container {
+    /* Top Header */
+    .app-header {
       display: flex;
-      height: 100vh;
-      width: 100%;
-      opacity: 0; /* Initially hidden for login */
-      transition: opacity 0.5s ease-in-out;
-    }
-    
-    .app-container.visible {
-      opacity: 1;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background-color: var(--bg-color);
+      border-bottom: 1px solid #1a1c23;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
 
+    .header-icon-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-size: 1.4rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-title .badge {
+      background-color: var(--primary-gold);
+      color: #000;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 1.2rem;
+    }
+
+    /* Main Container */
+    .content-container {
+      padding: 12px;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Login / Loading Screen */
     .login-screen {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        font-size: 1.2rem;
-    }
-
-    /* Player Section */
-    .player-section {
-      flex: 3;
       display: flex;
-      flex-direction: column;
-      background-color: #000;
+      justify-content: center;
+      align-items: center;
+      height: 80vh;
+      font-size: 1.1rem;
+      color: var(--text-secondary);
     }
 
+    /* Video Player Area */
     .player-wrapper {
       position: relative;
       width: 100%;
       background-color: #000;
       aspect-ratio: 16 / 9;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 16px;
+      display: none; /* Initially hidden until video clicked */
+    }
+
+    .player-wrapper.active {
       display: flex;
       align-items: center;
       justify-content: center;
@@ -85,261 +123,417 @@
       height: 100%;
       border: none;
     }
-    
-    .loading-indicator, .error-message {
-      font-size: 1.2rem;
-      color: var(--text-secondary);
+
+    /* Top Filter Buttons */
+    .top-filters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
-    /* Playlist Section */
-    .playlist-section {
-      flex: 1;
+    .filter-btn {
       display: flex;
       flex-direction: column;
-      background-color: var(--primary-surface-color);
-      overflow-y: auto;
-      padding: 16px 8px;
-    }
-    
-    .playlist-header {
-        font-size: 1.1rem;
-        font-weight: 700;
-        padding: 0 8px 16px 8px;
-        color: var(--text-primary);
-        border-bottom: 1px solid var(--secondary-surface-color);
-        margin-bottom: 16px;
-    }
-    
-    .welcome-message {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        padding: 0 8px 10px;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 8px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      text-align: center;
+      font-family: inherit;
     }
 
+    .filter-btn.gold {
+      background: linear-gradient(135deg, #ffab00, #e69500);
+      color: #000;
+    }
+
+    .filter-btn.dark {
+      background-color: var(--secondary-blue);
+      border: 1px solid #1e293b;
+      color: #fff;
+    }
+
+    .filter-btn .main-text {
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .filter-btn .sub-text {
+      font-size: 0.7rem;
+      font-weight: 600;
+      opacity: 0.85;
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    /* Category Scroll Pills */
+    .category-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+      scrollbar-width: none;
+    }
+    .category-scroll::-webkit-scrollbar { display: none; }
+
+    .chip {
+      background-color: #1a1d26;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      white-space: nowrap;
+      border: 1px solid var(--border-color);
+      cursor: pointer;
+    }
+
+    .chip.active {
+      background-color: var(--primary-gold);
+      color: #000;
+      border-color: var(--primary-gold);
+    }
+
+    /* Notice Marquee Bar */
+    .notice-bar {
+      background-color: #161820;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      color: #d1d5db;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .section-heading {
+      font-size: 1.4rem;
+      font-weight: 800;
+      margin: 0 0 12px 0;
+    }
+
+    /* Video Feed & Cards */
     .video-feed {
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 16px;
     }
 
     .video-card {
-      cursor: pointer;
-      display: flex;
-      gap: 12px;
-      padding: 8px;
-      border-radius: 8px;
-      transition: background-color 0.2s ease-in-out;
-      border: 2px solid transparent;
-      position: relative;
-    }
-
-    .video-card:hover {
-      background-color: var(--hover-bg-color);
-    }
-    
-    .video-card.active {
-      background-color: var(--secondary-surface-color);
-      border-color: var(--accent-color);
-    }
-    
-    .video-card.locked::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: rgba(0,0,0,0.5);
-        border-radius: 8px;
-        z-index: 1;
-    }
-
-    .lock-overlay {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-size: 2rem;
-        color: white;
-        z-index: 2;
-        text-shadow: 0 0 5px black;
-    }
-
-    .thumbnail-container {
-      position: relative;
-      width: 140px;
-      flex-shrink: 0;
-    }
-    
-    .video-card.active .thumbnail-container::after {
-        content: '▶ এখন চলছে';
-        position: absolute;
-        bottom: 5px;
-        left: 5px;
-        background-color: var(--accent-color);
-        color: #fff;
-        padding: 2px 6px;
-        border-radius: 4px;
-        font-size: 10px;
-        font-weight: 700;
-    }
-
-    .thumbnail-container img {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-      display: block;
-      border-radius: 8px;
-    }
-
-    .video-duration {
-      position: absolute;
-      bottom: 5px;
-      right: 5px;
-      background-color: rgba(0, 0, 0, 0.85);
-      color: white;
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 12px;
-      font-weight: 500;
-    }
-    
-    .video-card.active .video-duration {
-        display: none;
-    }
-
-    .video-meta {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-color);
       display: flex;
       flex-direction: column;
-      justify-content: flex-start;
-      padding-top: 4px;
-      overflow: hidden;
+    }
+
+    .thumbnail-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background-color: #000;
+      cursor: pointer;
+    }
+
+    .thumbnail-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .duration-badge {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .play-watermark {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      color: #ff4d4d;
+      font-size: 1.2rem;
+    }
+
+    .video-card.locked .thumbnail-box::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+    }
+
+    .lock-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 2rem;
+      z-index: 2;
+    }
+
+    .video-content {
+      padding: 12px;
+    }
+
+    .title-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
     .video-title {
-      font-size: 15px;
-      font-weight: 500;
-      color: var(--text-primary);
-      margin: 0 0 6px 0;
+      font-size: 0.95rem;
+      font-weight: 600;
+      line-height: 1.4;
+      margin: 0;
+      color: #fff;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
 
-    .video-info {
-      font-size: 13px;
+    .share-btn {
+      background-color: #272013;
+      border: 1px solid #4d3a14;
+      color: var(--primary-gold);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
       color: var(--text-secondary);
     }
-    
+
+    .stats-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stat-pill {
+      background-color: #1b1e27;
+      padding: 4px 8px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.75rem;
+      color: #d1d5db;
+    }
+
+    /* Fixed Bottom Nav */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 60px;
+      background-color: #0b0c0e;
+      border-top: 1px solid #1a1c23;
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      z-index: 1000;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-family: inherit;
+      font-size: 0.8rem;
+      width: 45%;
+      height: 42px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .nav-item.active {
+      background-color: #221a0d;
+      color: var(--primary-gold);
+      font-weight: 700;
+    }
+
+    .nav-item svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+      margin-bottom: 2px;
+    }
+
     /* Unlock Modal */
-    .unlock-modal-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0,0,0,0.7);
-        display: none;
-        align-items: center;
-        justify-content: center;
-        z-index: 1000;
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
     }
-    .unlock-modal {
-        background: var(--primary-surface-color);
-        padding: 24px;
-        border-radius: 12px;
-        text-align: center;
-        width: 90%;
-        max-width: 350px;
-        border: 1px solid var(--secondary-surface-color);
+
+    .modal-body {
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      width: 90%;
+      max-width: 340px;
+      border: 1px solid var(--border-color);
     }
-    .unlock-modal h3 {
-        margin-top: 0;
-        color: var(--text-primary);
+
+    .modal-body h3 {
+      margin-top: 0;
     }
-    .unlock-modal p {
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-    }
+
     .ad-counter {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: var(--accent-color);
-        margin: 16px 0;
-    }
-    #watch-ad-btn {
-        background-color: var(--accent-color);
-        color: white;
-        border: none;
-        padding: 12px 24px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-size: 1rem;
-        width: 100%;
-        transition: background-color 0.2s;
-        font-family: 'Hind Siliguri', sans-serif;
-    }
-    #watch-ad-btn:hover {
-        background-color: #3388dd;
-    }
-    #watch-ad-btn:disabled {
-        background-color: var(--text-secondary);
-        cursor: not-allowed;
-    }
-    .close-modal-btn {
-        background: var(--secondary-surface-color);
-        color: var(--text-primary);
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        margin-top: 10px;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary-gold);
+      margin: 12px 0;
     }
 
-    /* Custom Scrollbar */
-    .playlist-section::-webkit-scrollbar { width: 8px; }
-    .playlist-section::-webkit-scrollbar-track { background: var(--scrollbar-track-color); }
-    .playlist-section::-webkit-scrollbar-thumb { background-color: var(--scrollbar-thumb-color); border-radius: 10px; border: 2px solid var(--scrollbar-track-color); }
+    .btn-primary {
+      background-color: var(--primary-gold);
+      color: #000;
+      font-weight: 700;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      width: 100%;
+      cursor: pointer;
+      font-family: inherit;
+    }
 
-    @media (max-width: 850px) {
-      .app-container { flex-direction: column; height: auto; overflow: auto; }
-      .player-section, .playlist-section { flex: none; width: 100%; }
-      .playlist-section { height: auto; max-height: 60vh; }
-      .thumbnail-container { width: 120px; }
+    .btn-close {
+      background: transparent;
+      color: var(--text-secondary);
+      border: none;
+      margin-top: 8px;
+      cursor: pointer;
     }
   </style>
 </head>
 <body>
 
-  <div class="login-screen" id="login-screen">
-      <div class="loading-indicator">সংযোগ করা হচ্ছে...</div>
+  <!-- Header -->
+  <header class="app-header">
+    <button class="header-icon-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+    </button>
+    <div class="brand-title">
+      VIRAL <span class="badge">VIDEO LINK</span>
+    </div>
+    <button class="header-icon-btn">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    </button>
+  </header>
+
+  <div class="content-container">
+    
+    <div class="login-screen" id="login-screen">
+      <div>সংযোগ করা হচ্ছে...</div>
+    </div>
+
+    <div id="main-app" style="display: none;">
+      
+      <!-- Video Player Wrapper -->
+      <div class="player-wrapper" id="player-container"></div>
+
+      <!-- Main Filter Buttons -->
+      <div class="top-filters">
+        <button class="filter-btn gold">
+          <span class="main-text">All Videos</span>
+          <span class="sub-text">NEWEST POSTS FIRST</span>
+        </button>
+        <button class="filter-btn dark">
+          <span class="main-text">Trending</span>
+          <span class="sub-text">MOST VIEWED FIRST</span>
+        </button>
+      </div>
+
+      <!-- Categories Scroll Pills -->
+      <div class="category-scroll">
+        <div class="chip active">All Videos</div>
+        <div class="chip">viral videos || ভাইরাল ভিডিও</div>
+        <div class="chip">Movies</div>
+      </div>
+
+      <!-- Marquee Notice -->
+      <div class="notice-bar">
+        <span>🔒 | 📢 বেশি শেয়ার = বেশি ভিডিও 🔥 আপনার একটুখানি শেয়ার আমাদের অনুপ্রেরণা...</span>
+      </div>
+
+      <!-- Heading -->
+      <h2 class="section-heading">Latest Videos</h2>
+
+      <!-- Video Feed List -->
+      <div class="video-feed" id="video-feed"></div>
+
+    </div>
   </div>
 
-  <div class="app-container" id="app-container">
-    <div class="player-section">
-      <div class="player-wrapper" id="player-container"></div>
-    </div>
-    <div class="playlist-section">
-      <div class="playlist-header">ভিডিও তালিকা</div>
-      <div class="welcome-message" id="welcome-message"></div>
-      <div class="video-feed" id="video-feed"></div>
-    </div>
-  </div>
-  
-  <div class="unlock-modal-overlay" id="unlock-modal-overlay">
-      <div class="unlock-modal">
-          <h3>🔒 ভিডিওটি লক করা</h3>
-          <p>এই ভিডিওটি আনলক করতে নিচের বাটনে ক্লিক করে ৫টি বিজ্ঞাপন দেখুন।</p>
-          <div class="ad-counter">
-              <span id="ad-watch-count">০</span> / ৫টি বিজ্ঞাপন দেখা হয়েছে
-          </div>
-          <button id="watch-ad-btn">বিজ্ঞাপন দেখুন</button>
-          <button class="close-modal-btn" id="close-modal-btn">বন্ধ করুন</button>
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      Home
+    </button>
+    <button class="nav-item">
+      <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+      Profile
+    </button>
+  </nav>
+
+  <!-- Unlock Modal -->
+  <div class="modal-overlay" id="unlock-modal">
+    <div class="modal-body">
+      <h3>🔒 ভিডিওটি লক করা</h3>
+      <p style="color: var(--text-secondary); font-size: 0.9rem;">এই ভিডিওটি আনলক করতে ৫টি বিজ্ঞাপন দেখুন।</p>
+      <div class="ad-counter">
+        <span id="ad-count">০</span> / ৫
       </div>
+      <button class="btn-primary" id="watch-ad-btn">বিজ্ঞাপন দেখুন</button>
+      <button class="btn-close" id="close-modal-btn">বন্ধ করুন</button>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
   <script>
-    const VideoPlayerApp = {
-      config: {
-        videos: []
-      },
-      
+    const VideoApp = {
+      config: { videos: [] },
       firebaseConfig: {
         apiKey: "AIzaSyA6JPDxbD5k1S-7bNikp6U_vFALPFl_fto",
         authDomain: "daily-paybot.firebaseapp.com",
@@ -351,11 +545,8 @@
       },
 
       state: {
-        currentHlsInstance: null,
-        activeVideoElement: null,
-        lastTap: 0,
-        telegramUser: null,
-        unlockedVideos: [0], // First video is always unlocked
+        currentHls: null,
+        unlockedVideos: [0],
         adsWatched: 0,
         videoToUnlock: null,
         currentAdIndex: 0
@@ -365,274 +556,179 @@
         playerContainer: document.getElementById('player-container'),
         videoFeed: document.getElementById('video-feed'),
         loginScreen: document.getElementById('login-screen'),
-        appContainer: document.getElementById('app-container'),
-        welcomeMessage: document.getElementById('welcome-message'),
-        unlockModalOverlay: document.getElementById('unlock-modal-overlay'),
-        adWatchCount: document.getElementById('ad-watch-count'),
+        mainApp: document.getElementById('main-app'),
+        unlockModal: document.getElementById('unlock-modal'),
+        adCount: document.getElementById('ad-count'),
         watchAdBtn: document.getElementById('watch-ad-btn'),
-        closeModalBtn: document.getElementById('close-modal-btn'),
+        closeModalBtn: document.getElementById('close-modal-btn')
       },
-      
+
       ads: [
-        () => new Promise((resolve, reject) => { try { LibTl.SDK.show(10117142); resolve(); } catch (e) { reject(e); } }),
-        () => new Promise((resolve, reject) => { window.showGiga().then(resolve).catch(reject); }),
-        () => new Promise((resolve, reject) => { try { const adexiumWidget = new AdexiumWidget({wid: '6052f786-5400-4390-a082-0c893fc47da3', adFormat: 'push-like'}); adexiumWidget.autoMode(); resolve(); } catch(e) { reject(e); } }),
-        () => new Promise((resolve, reject) => { window.showAdexora().then(resolve).catch(reject); }),
-        () => new Promise((resolve, reject) => { try { LibTl.SDK.show(10056357); resolve(); } catch (e) { reject(e); } })
+        () => new Promise((resolve) => { try { LibTl.SDK.show(10117142); resolve(); } catch(e){ resolve(); } }),
+        () => new Promise((resolve) => { window.showGiga ? window.showGiga().then(resolve).catch(resolve) : resolve(); }),
+        () => new Promise((resolve) => { try { new AdexiumWidget({wid: '6052f786-5400-4390-a082-0c893fc47da3', adFormat: 'push-like'}).autoMode(); resolve(); } catch(e){ resolve(); } }),
+        () => new Promise((resolve) => { window.showAdexora ? window.showAdexora().then(resolve).catch(resolve) : resolve(); }),
+        () => new Promise((resolve) => { try { LibTl.SDK.show(10056357); resolve(); } catch(e){ resolve(); } })
       ],
-      
+
       init() {
         this.loadUnlockedState();
-        this.addEventListeners();
+        this.addEvents();
         this.handleTelegramLogin();
       },
-      
-      addEventListeners() {
-        this.elements.watchAdBtn.onclick = () => this.watchAd();
-        this.elements.closeModalBtn.onclick = () => this.hideUnlockModal();
-      },
-      
-      handleTelegramLogin() {
-          const tg = window.Telegram.WebApp;
-          tg.ready();
 
-          if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-              this.state.telegramUser = tg.initDataUnsafe.user;
-              this.elements.welcomeMessage.innerText = `স্বাগতম, ${this.state.telegramUser.first_name}!`;
-              this.initializeFirebase();
-          } else {
-              this.elements.loginScreen.innerHTML = `<div class="error-message">টেলিগ্রাম ব্যবহারকারীর তথ্য পাওয়া যায়নি। দয়া করে টেলিগ্রাম অ্যাপ থেকে খুলুন।</div>`;
-          }
+      addEvents() {
+        this.elements.watchAdBtn.onclick = () => this.watchAd();
+        this.elements.closeModalBtn.onclick = () => this.elements.unlockModal.style.display = 'none';
       },
-      
-      initializeFirebase() {
+
+      handleTelegramLogin() {
+        const tg = window.Telegram.WebApp;
+        tg.ready();
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+          this.initFirebase();
+        } else {
+          // Fallback testing outside Telegram
+          this.initFirebase();
+        }
+      },
+
+      initFirebase() {
         firebase.initializeApp(this.firebaseConfig);
         const db = firebase.database();
-        const videosRef = db.ref('/videos');
-
-        videosRef.on('value', (snapshot) => {
-            const data = snapshot.val();
-            if (data && Array.isArray(data)) {
-                this.config.videos = data.filter(video => video && video.url);
-                this.showApp();
-            } else {
-                this.elements.loginScreen.innerHTML = `<div class="error-message">ডাটাবেস থেকে কোনো ভিডিও খুঁজে পাওয়া যায়নি।</div>`;
-            }
-        }, (error) => {
-            this.elements.loginScreen.innerHTML = `<div class="error-message">ডাটাবেস সংযোগে সমস্যা হয়েছে।</div>`;
+        db.ref('/videos').on('value', (snapshot) => {
+          const data = snapshot.val();
+          if (data && Array.isArray(data)) {
+            this.config.videos = data.filter(v => v && v.url);
+            this.showApp();
+          } else {
+            this.elements.loginScreen.innerText = "কোনো ভিডিও পাওয়া যায়নি।";
+          }
         });
       },
 
       showApp() {
         this.elements.loginScreen.style.display = 'none';
-        this.elements.appContainer.classList.add('visible');
-        this.renderVideoFeed();
-        if (this.config.videos.length > 0) {
-            this.loadVideo(0, true);
-        } else {
-             this.elements.playerContainer.innerHTML = `<div class="error-message">কোনো ভিডিও নেই।</div>`;
-        }
-        this.addDoubleTapListener();
+        this.elements.mainApp.style.display = 'block';
+        this.renderFeed();
       },
 
-      renderVideoFeed() {
+      renderFeed() {
         this.elements.videoFeed.innerHTML = '';
         this.config.videos.forEach((video, index) => {
-          if (!video.url) return;
-          const card = document.createElement('div');
-          card.className = 'video-card';
-          
           const isUnlocked = this.state.unlockedVideos.includes(index);
+          const card = document.createElement('div');
+          card.className = `video-card ${isUnlocked ? '' : 'locked'}`;
 
-          card.onclick = () => {
-            if (isUnlocked) {
-                this.loadVideo(index, true);
-            } else {
-                this.promptUnlock(index);
-            }
-          };
-          
-          let cardContent = `
-            <div class="thumbnail-container">
-              <img src="${video.thumbnail}" alt="${video.title}" loading="lazy">
-              <span class="video-duration">${video.duration}</span>
+          card.innerHTML = `
+            <div class="thumbnail-box" onclick="VideoApp.onVideoClick(${index})">
+              <img src="${video.thumbnail}" alt="${video.title}">
+              <span class="duration-badge">${video.duration || '4K 2:07:33'}</span>
+              <span class="play-watermark">▶</span>
+              ${!isUnlocked ? '<div class="lock-icon">🔒</div>' : ''}
             </div>
-            <div class="video-meta">
-              <h3 class="video-title">${video.title}</h3>
-              <div class="video-info">${video.channel}</div>
-            </div>`;
-
-          if (!isUnlocked) {
-              card.classList.add('locked');
-              cardContent += `<div class="lock-overlay">🔒</div>`;
-          }
-          card.innerHTML = cardContent;
+            <div class="video-content">
+              <div class="title-row">
+                <h3 class="video-title">${video.title}</h3>
+                <button class="share-btn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg>
+                </button>
+              </div>
+              <div class="meta-row">
+                <div class="stats-group">
+                  <span class="stat-pill">👁️ ${video.views || '796'}</span>
+                  <span class="stat-pill">❤️ ${video.likes || '13'}</span>
+                </div>
+                <span>${video.timeAgo || '2 month ago'}</span>
+              </div>
+            </div>
+          `;
           this.elements.videoFeed.appendChild(card);
         });
       },
-      
+
+      onVideoClick(index) {
+        if (this.state.unlockedVideos.includes(index)) {
+          this.loadVideo(index);
+        } else {
+          this.promptUnlock(index);
+        }
+      },
+
       promptUnlock(index) {
-          this.state.videoToUnlock = index;
-          this.state.adsWatched = 0;
-          this.elements.adWatchCount.innerText = this.state.adsWatched;
-          this.elements.unlockModalOverlay.style.display = 'flex';
+        this.state.videoToUnlock = index;
+        this.state.adsWatched = 0;
+        this.elements.adCount.innerText = "০";
+        this.elements.unlockModal.style.display = 'flex';
       },
-      
-      hideUnlockModal() {
-          this.elements.unlockModalOverlay.style.display = 'none';
-      },
-      
+
       async watchAd() {
-          const btn = this.elements.watchAdBtn;
-          btn.disabled = true;
-          btn.innerText = 'লোড হচ্ছে...';
-          
-          try {
-              await this.ads[this.state.currentAdIndex]();
-              this.state.adsWatched++;
-              this.elements.adWatchCount.innerText = this.state.adsWatched;
+        const btn = this.elements.watchAdBtn;
+        btn.disabled = true;
+        btn.innerText = 'লোড হচ্ছে...';
 
-              // Cycle to the next ad provider
-              this.state.currentAdIndex = (this.state.currentAdIndex + 1) % this.ads.length;
+        await this.ads[this.state.currentAdIndex]();
+        this.state.adsWatched++;
+        this.elements.adCount.innerText = this.state.adsWatched;
+        this.state.currentAdIndex = (this.state.currentAdIndex + 1) % this.ads.length;
 
-              if (this.state.adsWatched >= 5) {
-                  this.unlockVideo();
-              }
-          } catch (error) {
-              console.error("Ad failed to show:", error);
-              // In case of an error, let's count it as watched so user is not stuck
-              this.state.adsWatched++;
-              this.elements.adWatchCount.innerText = this.state.adsWatched;
-              if (this.state.adsWatched >= 5) {
-                  this.unlockVideo();
-              }
-          } finally {
-              if (this.state.adsWatched < 5) {
-                btn.disabled = false;
-                btn.innerText = 'আবার বিজ্ঞাপন দেখুন';
-              }
-          }
+        if (this.state.adsWatched >= 5) {
+          this.state.unlockedVideos.push(this.state.videoToUnlock);
+          this.saveUnlockedState();
+          this.elements.unlockModal.style.display = 'none';
+          this.renderFeed();
+          this.loadVideo(this.state.videoToUnlock);
+        }
+
+        btn.disabled = false;
+        btn.innerText = 'বিজ্ঞাপন দেখুন';
       },
 
-      unlockVideo() {
-          if (this.state.videoToUnlock !== null) {
-              this.state.unlockedVideos.push(this.state.videoToUnlock);
-              this.saveUnlockedState();
-              this.hideUnlockModal();
-              this.renderVideoFeed();
-              this.loadVideo(this.state.videoToUnlock, true);
-              this.state.videoToUnlock = null;
+      loadVideo(index) {
+        const video = this.config.videos[index];
+        const container = this.elements.playerContainer;
+        container.classList.add('active');
+        container.innerHTML = '';
+
+        if (video.url.includes('.m3u8')) {
+          const videoEl = document.createElement('video');
+          videoEl.controls = true;
+          videoEl.autoplay = true;
+          if (Hls.isSupported()) {
+            const hls = new Hls();
+            hls.loadSource(video.url);
+            hls.attachMedia(videoEl);
+          } else {
+            videoEl.src = video.url;
           }
+          container.appendChild(videoEl);
+        } else if (video.url.match(/\.(mp4|webm)/)) {
+          const videoEl = document.createElement('video');
+          videoEl.controls = true;
+          videoEl.autoplay = true;
+          videoEl.src = video.url;
+          container.appendChild(videoEl);
+        } else {
+          const iframe = document.createElement('iframe');
+          iframe.src = video.url;
+          iframe.allow = "autoplay; fullscreen";
+          container.appendChild(iframe);
+        }
+
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       },
-      
+
       saveUnlockedState() {
-          sessionStorage.setItem('unlockedVideos', JSON.stringify(this.state.unlockedVideos));
+        localStorage.setItem('unlockedVideos', JSON.stringify(this.state.unlockedVideos));
       },
 
       loadUnlockedState() {
-          const savedState = sessionStorage.getItem('unlockedVideos');
-          if (savedState) {
-              this.state.unlockedVideos = JSON.parse(savedState);
-          }
-      },
-
-      loadVideo(index, autoplay = false) {
-        if (this.state.currentHlsInstance) this.state.currentHlsInstance.destroy();
-        this.state.currentHlsInstance = null;
-        this.state.activeVideoElement = null;
-        this.elements.playerContainer.innerHTML = `<div class="loading-indicator">লোড হচ্ছে...</div>`;
-        this.highlightActiveCard(index);
-
-        const videoData = this.config.videos[index];
-        const url = videoData.url;
-
-        if (this.isVideoType(url, 'direct')) this.createDirectVideoPlayer(url, autoplay);
-        else if (this.isVideoType(url, 'hls')) this.createHlsPlayer(url, autoplay);
-        else this.createIframePlayer(url, autoplay);
-      },
-      
-      createIframePlayer(url, autoplay) {
-        const iframe = document.createElement('iframe');
-        const urlObj = new URL(url);
-        if (autoplay) {
-            urlObj.searchParams.set('autoplay', '1');
-            urlObj.searchParams.set('muted', '1');
-        }
-        iframe.src = urlObj.toString();
-        iframe.allow = 'autoplay; fullscreen; picture-in-picture';
-        iframe.setAttribute('allowfullscreen', '');
-        this.elements.playerContainer.innerHTML = '';
-        this.elements.playerContainer.appendChild(iframe);
-      },
-
-      createHlsPlayer(url, autoplay) {
-        const video = this.createVideoElement(autoplay);
-        this.elements.playerContainer.innerHTML = ''; 
-        if (Hls.isSupported()) {
-          const hls = new Hls();
-          hls.loadSource(url);
-          hls.attachMedia(video);
-          this.state.currentHlsInstance = hls;
-        } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-          video.src = url;
-        } else {
-          this.elements.playerContainer.innerHTML = `<div class="error-message">HLS সাপোর্ট করে না।</div>`;
-          return;
-        }
-        this.elements.playerContainer.appendChild(video);
-        this.state.activeVideoElement = video;
-      },
-
-      createDirectVideoPlayer(url, autoplay) {
-        const video = this.createVideoElement(autoplay);
-        video.src = url;
-        this.elements.playerContainer.innerHTML = '';
-        this.elements.playerContainer.appendChild(video);
-        this.state.activeVideoElement = video;
-      },
-      
-      createVideoElement(autoplay) {
-        const video = document.createElement('video');
-        video.autoplay = autoplay;
-        video.muted = true;
-        video.playsInline = true;
-        video.controls = true;
-        video.preload = 'metadata'; 
-        return video;
-      },
-
-      addDoubleTapListener() {
-        this.elements.playerContainer.addEventListener('touchend', (e) => {
-            const currentTime = new Date().getTime();
-            const tapLength = currentTime - this.state.lastTap;
-            if (tapLength < 300 && tapLength > 0) {
-                if (!this.state.activeVideoElement) return;
-                const rect = e.target.getBoundingClientRect();
-                const tapPosition = (e.changedTouches[0].clientX - rect.left) / rect.width;
-                if (tapPosition > 0.5) this.state.activeVideoElement.currentTime += 10;
-                else this.state.activeVideoElement.currentTime -= 10;
-                e.preventDefault();
-            }
-            this.state.lastTap = currentTime;
-        });
-      },
-
-      highlightActiveCard(index) {
-        const allCards = this.elements.videoFeed.querySelectorAll('.video-card');
-        allCards.forEach((card, i) => card.classList.toggle('active', i === index));
-      },
-
-      isVideoType(url, type) {
-        const patterns = {
-          hls: /\.m3u8(\?|$)/i,
-          direct: /\.(mp4|webm|ogg)(\?|$)/i
-        };
-        return patterns[type] ? patterns[type].test(url) : false;
+        const saved = localStorage.getItem('unlockedVideos');
+        if (saved) this.state.unlockedVideos = JSON.parse(saved);
       }
     };
 
-    document.addEventListener('DOMContentLoaded', () => VideoPlayerApp.init());
+    document.addEventListener('DOMContentLoaded', () => VideoApp.init());
   </script>
-
 </body>
 </html>
